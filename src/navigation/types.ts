@@ -1,0 +1,42 @@
+export type RootStackParamList = {
+  CoverScreen: undefined;
+  TitleScreen: undefined;
+  SignUpScreen: undefined;
+  SignInScreen: undefined;
+  PaymentScreen: undefined;
+  WelcomeBackScreen: undefined;
+  SilentScreen: undefined;
+  NameGroupScreen: undefined;
+  InviteCodeScreen: undefined;
+  FollowersScreen: undefined;
+  GetHelpScreen: undefined;
+  ActionScreen: undefined;
+  SettingScreen: undefined;
+  ProfileScreen: undefined;
+  LiveTrackingScreen: { userId?: string };
+  SOSActivationScreen: undefined;
+  HomeScreen: undefined;
+  InCodeScreen: undefined;
+  RoadieJoinScreen: undefined;
+  ForgotPasswordScreen: undefined;
+  PINManagementScreen: undefined;
+  BackupRequestScreen: undefined;
+  CoWorkersGroupScreen: undefined;
+  WalkWithMeGroupScreen: undefined;
+  InDangerGroupScreen: undefined;
+  MedicalERGroupScreen: undefined;
+  LocateChildGroupScreen: undefined;
+  FollowUserScreen: undefined;
+  PriorityAlertsScreen: undefined;
+  QuickSwitchScreen: undefined;
+  EmergencyChatScreen: { sosId: string };
+  SOSLogsScreen: undefined;
+  SOSRecordingReviewScreen: { logId: string };
+  WatchPage: { userId: string };
+  LogOutScreen: undefined;
+  StealthSOSScreen: undefined;
+  SOSHistoryScreen: undefined;
+
+  // ✅ Add missing screen(s)
+  MedicalInfoScreen: undefined;
+};
