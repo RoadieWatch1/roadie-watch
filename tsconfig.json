@@ -4,15 +4,15 @@
     "strict": true,
     "jsx": "react-jsx",
     "paths": {
-      "@/*": [
-        "./*"
-      ]
+      "@/*": ["./*"]
     }
   },
   "include": [
     "**/*.ts",
     "**/*.tsx",
-    "expo-env.d.ts",
-    ".expo/types/**/*.ts"
+    "expo-env.d.ts"
+  ],
+  "exclude": [
+    ".expo/types"  // <- add this line
   ]
 }

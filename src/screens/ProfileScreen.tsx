@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -10,18 +10,68 @@ import {
   ScrollView,
 } from 'react-native';
 import { router } from 'expo-router';
+import { supabase } from '../../app/lib/supabase';
 
 const { width } = Dimensions.get('window');
 
 const ProfileScreen: React.FC = () => {
-  const [user] = useState({
-    name: 'John Doe',
+  const [user, setUser] = useState({
+    full_name: 'John Doe',
     email: 'john.doe@example.com',
     phone: '+1 (555) 123-4567',
-    memberSince: 'January 2024',
+    inserted_at: new Date().toISOString(),
     sosCount: 0,
-    watcherCount: 8,
+    watcherCount: 0,
   });
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchProfile();
+  }, []);
+
+  const fetchProfile = async () => {
+    setLoading(true);
+    try {
+      const { data: { user: authUser } } = await supabase.auth.getUser();
+      if (authUser) {
+        const { data: profileData } = await supabase
+          .from('profiles')
+          .select('full_name, email, phone, inserted_at')
+          .eq('id', authUser.id)
+          .single();
+
+        if (profileData) {
+          setUser(prev => ({
+            ...prev,
+            full_name: profileData.full_name || 'John Doe',
+            email: profileData.email || authUser.email,
+            phone: profileData.phone || '+1 (555) 123-4567',
+            inserted_at: profileData.inserted_at || new Date().toISOString(),
+          }));
+        }
+
+        const { count: sosCount } = await supabase
+          .from('sos_activations')
+          .select('id', { count: 'exact' })
+          .eq('user_id', authUser.id);
+
+        const { count: watcherCount } = await supabase
+          .from('followers')
+          .select('id', { count: 'exact' })
+          .eq('followed_id', authUser.id);
+
+        setUser(prev => ({
+          ...prev,
+          sosCount: sosCount || 0,
+          watcherCount: watcherCount || 0,
+        }));
+      }
+    } catch (error) {
+      console.error('Failed to fetch profile:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleEditProfile = () => {
     Alert.alert('Edit Profile', 'Profile editing feature coming soon!');
@@ -50,9 +100,22 @@ const ProfileScreen: React.FC = () => {
     );
   };
 
-  const handleEmergencyContacts = () => {
-    Alert.alert('Emergency Contacts', 'Manage your emergency contacts');
+  const handleSignOut = async () => {
+    try {
+      await supabase.auth.signOut();
+      router.replace('/title');
+    } catch (error) {
+      console.error('Sign out error:', error);
+    }
   };
+
+  if (loading) {
+    return (
+      <View style={styles.container}>
+        <Text style={styles.loadingText}>Loading profile...</Text>
+      </View>
+    );
+  }
 
   return (
     <ScrollView style={styles.container}>
@@ -68,9 +131,11 @@ const ProfileScreen: React.FC = () => {
           </View>
         </TouchableOpacity>
 
-        <Text style={styles.userName}>{user.name}</Text>
+        <Text style={styles.userName}>{user.full_name}</Text>
         <Text style={styles.userEmail}>{user.email}</Text>
-        <Text style={styles.memberSince}>Member since {user.memberSince}</Text>
+        <Text style={styles.memberSince}>
+          Member since {new Date(user.inserted_at).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+        </Text>
       </View>
 
       {/* Stats Section */}
@@ -95,7 +160,7 @@ const ProfileScreen: React.FC = () => {
           <Text style={styles.actionButtonText}>✏️ Edit Profile</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.actionButton} onPress={handleEmergencyContacts}>
+        <TouchableOpacity style={styles.actionButton} onPress={() => router.push('/medical-info' as any)}>
           <Text style={styles.actionButtonText}>📞 Emergency Contacts</Text>
         </TouchableOpacity>
 
@@ -110,7 +175,7 @@ const ProfileScreen: React.FC = () => {
               { text: 'Cancel', style: 'cancel' },
               {
                 text: 'Sign Out',
-                onPress: () => router.replace('/title'),
+                onPress: handleSignOut,
               },
             ])
           }
@@ -136,28 +201,28 @@ const ProfileScreen: React.FC = () => {
       <View style={styles.bottomNav}>
         <TouchableOpacity
           style={styles.navButton}
-          onPress={() => router.push('/GetHelpScreen')}
+          onPress={() => router.push('/get-help' as any)}
         >
           <Text style={styles.navText}>🚨 Help</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
           style={styles.navButton}
-          onPress={() => router.push('/FollowersScreen')}
+          onPress={() => router.push('/followers' as any)}
         >
           <Text style={styles.navText}>👥 Groups</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
           style={styles.navButton}
-          onPress={() => router.push('/LiveTrackingScreen')}
+          onPress={() => router.push('/live-tracking' as any)}
         >
           <Text style={styles.navText}>📍 Tracking</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
           style={styles.navButton}
-          onPress={() => router.push('/SettingScreen')}
+          onPress={() => router.push('/setting' as any)}
         >
           <Text style={styles.navText}>⚙️ Settings</Text>
         </TouchableOpacity>
@@ -170,6 +235,12 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#1C1C1C',
+  },
+  loadingText: {
+    color: 'white',
+    fontSize: 18,
+    textAlign: 'center',
+    marginTop: 20,
   },
   header: {
     alignItems: 'center',
